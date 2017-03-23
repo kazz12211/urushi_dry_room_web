@@ -1,0 +1,55 @@
+@media screen and (max-width: 640px){
+
+img{
+	max-width: 100%;
+	height: auto;
+	width /***/:auto;Å@
+}
+#container{
+	width:100%;
+}
+
+table.datatable {
+	border-top:1px solid #ccc;
+	border-left:1px solid #ccc;
+	border-collapse:separate;
+	border-spacing:1px;
+	line-height:1.5;
+	margin:10px;
+}
+table.datatable td {
+	border-bottom:1px solid #ccc;
+	border-right:1px solid #ccc;
+}
+
+table.datatable td.label {
+	background-color:#e9e9f4;
+	text-align:right;
+}
+table.datatable td.data {
+	background-color:white;
+}
+
+div.header {
+	margin: 0px;
+	height:30px;
+	width: 345px;
+	background-color: rgb(32,160,233);
+	color: #fff;
+	font-size:24px;
+	font-weight: bold;
+	padding: 12px 16px 10px 20px;
+}
+
+div.content {
+	width: 345px;
+	background-color: #fff;
+	margin: 8px;
+}
+
+body.dashboard {
+	margin: 0px;
+	background-color: #fff;
+}
+
+}

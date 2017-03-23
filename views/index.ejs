@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1" />
+<link rel="stylesheet" media="all" type="text/css" href="/stylesheets/style.css" />
+<link rel="stylesheet" media="all" type="text/css" href="/stylesheets/tablet.css" />
+<link rel="stylesheet" media="all" type="text/css" href="/stylesheets/smart.css" />
+<title><%= title %></title>
+<script src="/javascript/jquery-1.12.0.min.js"></script>
+<script src="/javascript/d3.js"></script>
+<script src="/javascript/numeral.min.js"></script>
+<link rel="stylesheet" href="/stylesheets/chart.css">
+<script>
+var lastData = null;
+
+function populateTable(collection) {
+	var table = ts.ui.get('#table');
+	table.cols([
+		{label: 'Timestamp', ascending:false},
+		{label: 'Temperature', type:'ts-number'},
+		{label: 'Humidity', type: 'ts-number'}
+	]);
+	var rows = [];
+	for(var i in collection) {
+		var data = collection[i];
+		var row = [
+			data.timestamp,
+			data.temperature,
+			data.humidity
+		];
+		rows.push(row);
+	}
+	table.rows(rows).max(10);
+	table.sort(1, false);
+}
+
+function toLocalTime(ts) {
+	var time = ts.getTime();
+	time += 1000 * 60 * 60 * 9;
+	return new Date(time);
+}
+
+function drawTimestamp(ts) {
+	var timestamp = d3.timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(ts);
+	$('#timestamp').text(d3.timeFormat("%Y-%m-%d %H:%M:%S")(toLocalTime(timestamp)));
+}
+
+function arcTween(arc, newAngle) {
+	return function(d) {
+	    var interpolate = d3.interpolate(d.endAngle, newAngle);		
+	    return function(t) {
+	        d.endAngle = interpolate(t);
+	        return arc(d);
+	    };
+	};
+}
+
+function drawTempGuage(value) {
+	var t = 2 * Math.PI;
+	var svg = d3.select("#tempGuage");
+	var width = +svg.attr("width");
+	var height = +svg.attr("height");
+	
+	svg.selectAll("*").remove();
+	
+	var g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+	
+	var arc = d3.arc()
+		.innerRadius(width/2 - 24)
+		.outerRadius(width/2 - 4)
+		.startAngle(0);
+	
+	var background = g.append("path")
+		.datum({endAngle: t})
+		.style("stroke", "#ddd")
+		.style("fill", "#ddd")
+		.attr("d", arc);
+	
+	var foreground = g.append("path")
+		.datum({endAngle:0.127 * t})
+		.style("stroke", "red")
+		.style("fill", "red")
+		.attr("d", arc);
+	
+	svg.append("text")
+	.attr("x", width/2 - 30)
+	.attr("y", height/2 + 8)
+	.style("font-size", "24px")
+	.style("font-weight", "bold")
+	.style("fill", "darkgray")
+	.text(numeral(value).format('00.00'));
+
+	foreground.transition()
+		.duration(10)
+		.attrTween("d", arcTween(arc, (value / 50) * t));
+}
+
+function drawHumidGuage(value) {
+	var t = 2 * Math.PI;
+	var svg = d3.select("#humidGuage");
+	var width = +svg.attr("width");
+	var height = +svg.attr("height");
+	
+	svg.selectAll("*").remove();
+	
+	var g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+	
+	var arc = d3.arc()
+		.innerRadius(width/2 - 24)
+		.outerRadius(width/2 - 4)
+		.startAngle(0);
+	
+	var background = g.append("path")
+		.datum({endAngle: t})
+		.style("stroke", "#ddd")
+		.style("fill", "#ddd")
+		.attr("d", arc);
+	
+	var foreground = g.append("path")
+		.datum({endAngle:0.127 * t})
+		.style("stroke", "steelblue")
+		.style("fill", "steelblue")
+		.attr("d", arc);
+	
+	svg.append("text")
+		.attr("x", width/2 - 30)
+		.attr("y", height/2 + 8)
+		.style("font-size", "24px")
+		.style("font-weight", "bold")
+		.style("fill", "darkgray")
+		.text(numeral(value).format('00.00'));
+	
+	foreground.transition()
+		.duration(10)
+		.attrTween("d", arcTween(arc, (value / 100) * t));
+}
+
+function drawChart(collection) {
+	var parseDate = d3.timeParse("%Y-%m-%dT%H:%M:%S.%LZ");
+	var margin = {top: 4, right: 40, bottom: 30, left: 50},
+    width = +d3.select("#line").attr('width') - margin.left - margin.right,
+    height = +d3.select("#line").attr('height') - margin.top - margin.bottom;
+
+	var ser1 = collection.map(function(currentValue, index, array) {
+		return currentValue.temperature;
+	});
+	var ser2 = collection.map(function(currentValue, index, array) {
+		return currentValue.humidity;
+	});
+
+	var dateStart = toLocalTime(parseDate(collection[0].timestamp));
+	var dateEnd = toLocalTime(parseDate(collection[collection.length - 1].timestamp));
+	
+	var x = d3.scaleTime()
+		.domain([dateStart, dateEnd])
+		.range([0, width]);
+	var y0 = d3.scaleLinear()
+		.domain([d3.min(ser1) - 10, d3.max(ser1) + 1])
+		.range([height, 0]);
+	var y1 = d3.scaleLinear()
+		.domain([25, 99])
+		.range([height, 0]);
+
+    var svg = d3.select("#line");
+	
+	svg.selectAll("*").remove();
+
+	svg = d3.select("#line")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+	.append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");
+	
+	
+	var xAxis = d3.axisBottom().scale(x).ticks(5);
+
+	var yAxisLeft = d3.axisLeft().scale(y0).ticks(5);
+
+	var yAxisRight = d3.axisRight().scale(y1).ticks(5); 
+	
+	var valueline =d3.line()
+    	.x(function(d) { 
+    		return x(toLocalTime(parseDate(d.timestamp))); 
+    	})
+    	.y(function(d) { 
+    		return y0(d.temperature); 
+    	});
+    
+	var valueline2 = d3.line()
+    	.x(function(d) { 
+    		return x(toLocalTime(parseDate(d.timestamp))); 
+    	})
+    	.y(function(d) { 
+    		return y1(d.humidity); 
+    	});
+  
+    
+    svg.append("path")        // Add the valueline path.
+		.style("stroke", "red")
+    	.attr("d", valueline(collection));
+
+	svg.append("path")        // Add the valueline2 path.
+    	.attr("d", valueline2(collection));
+
+	svg.append("g")            // Add the X Axis
+    	.attr("class", "x axis")
+    	.attr("transform", "translate(0," + height + ")")
+    	.call(xAxis);
+
+	svg.append("g")
+    	.attr("class", "y axis")
+    	.style("fill", "red")		
+    	.call(yAxisLeft)
+    	.append("text")
+    	.attr("transform", "rotate(-90)")
+    	.attr("y", -30)
+    	.text("温度(c)");	
+
+	svg.append("g")				
+    	.attr("class", "y axis")	
+    	.attr("transform", "translate(" + width + " ,0)")	
+    	.style("fill", "steelblue")
+    	.call(yAxisRight)
+		.append("text")
+		.attr("transform", "rotate(-90)")
+		.attr("y", 24)
+		.attr("x", -50)
+		.text("湿度(%)");	
+}
+
+function poll() {
+	var since = parseInt($('#since').val());
+	var queryParams = {since:since};
+	$.ajax({
+		url: "/service/thermoHumid", type: "GET", data:queryParams, dataType: 'json',
+		success: function(o) {
+			var data = o[o.length - 1];
+			if(data) {
+				if(lastData == null) {
+					drawTempGuage(data.temperature);
+					drawHumidGuage(data.humidity);
+				} else {
+					if(lastData.temperature != data.temperature) {
+						drawTempGuage(data.temperature);
+					}
+					if(lastData.humidity != data.humidity) {
+						drawHumidGuage(data.humidity);
+					}
+				}
+			}
+			lastData = data;
+			if(o.length > 0) {
+				drawChart(o);
+			}
+		},
+		error: function(xhr, textStatus, errorThrown) {
+		}
+	});
+}
+
+$(function() {
+
+	var periodicTask = null;
+
+	$('#since').val('12');
+	$('#since').on('change', function(event) {
+		poll();
+	});
+	
+	poll();
+	
+	if(!periodicTask) {
+		periodicTask = window.setInterval(poll, 15000);
+	} else {
+		window.clearInterval(periodicTask);
+		periodicTask = window.setInterval(poll, 15000);
+	}
+
+});
+
+</script>
+</head>
+
+<body class="dashboard">
+	<div class='header'><%= title %></div>
+	<div class='content'>
+		<!-- <div style="font-size:24px" id="timestamp"></div> -->
+		<table width="100%">
+		<tr>
+		<td>
+		<table width="100%">
+		<tr>
+		<td align="center" style="font-size:16px">温度</td>
+		<td align="center" style="font-size:16px">湿度</td>
+		</tr>
+		<tr>
+		<td align="center">
+		<svg width="140" height="140" id="tempGuage"></svg>
+		</td>
+		<td align="center">
+		<svg width="140" height="140" id="humidGuage"></svg>
+		</td>
+		</tr>
+		</table>
+		</td>
+		</tr>
+		<tr>
+		<td>
+		<select id="since">
+  			<option value="3">3時間分</option>
+  			<option value="6">6時間分</option>
+  			<option value="12">12時間分</option>
+  			<option value="24">1日分</option>
+ 			<option value="48">2日分</option>
+ 			<option value="120">5日分</option>
+		</select>		
+		</td>
+		</tr>
+		<tr>
+		<td>
+		<svg id="line" width="345" height="280"></svg>
+		</td>
+		</tr>
+		</table>
+		
+		<!-- <div ts-table id='table'></div> -->
+	</div>
+</body>
+</html>

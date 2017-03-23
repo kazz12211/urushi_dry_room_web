@@ -1,0 +1,24 @@
+{
+  "name": "eon_test",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "4.14.0",
+    "express-session": "*",
+    "ejs": "*",
+    "morgan": "*",
+    "body-parser": "*",
+    "method-override": "*",
+    "cookie-parser": "*",
+    "errorhandler": "*",
+    "mqtt": "*",
+    "mongoose": "*",
+    "fs": "*",
+    "q": "*",
+    "timer": "*",
+    "request": "*"
+  }
+}
