@@ -1,6 +1,6 @@
 # urushi-dry-room-web
 
-- Node.js
-- MongoDB
+- Node.js + Express for web application framework
+- MongoDB for store/retrieve JSON data
 - MQTT
-- D3
+- D3 Chart Library
