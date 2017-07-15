@@ -1,24 +1,27 @@
 {
   "name": "eon_test",
   "version": "0.0.1",
+  "engines": {
+    "node": "8.1.4"
+  },
   "private": true,
   "scripts": {
     "start": "node app.js"
   },
   "dependencies": {
-    "express": "4.14.0",
-    "express-session": "*",
-    "ejs": "*",
-    "morgan": "*",
-    "body-parser": "*",
-    "method-override": "*",
+    "body-parser": "^1.17.2",
     "cookie-parser": "*",
-    "errorhandler": "*",
-    "mqtt": "*",
-    "mongoose": "*",
+    "ejs": "^2.5.6",
+    "errorhandler": "^1.5.0",
+    "express": "4.14.0",
+    "express-session": "^1.15.3",
     "fs": "*",
-    "q": "*",
-    "timer": "*",
-    "request": "*"
+    "method-override": "^2.3.9",
+    "mongoose": "^4.11.2",
+    "morgan": "^1.8.2",
+    "mqtt": "^2.9.1",
+    "q": "^2.0.3",
+    "request": "^2.81.0",
+    "timer": "*"
   }
 }

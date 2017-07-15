@@ -55,9 +55,7 @@ var mqtt_url = "mqtt://" + config.mqttServer + ":" + config.mqttPort;
 
 var client = null;
 if(process.env.CLOUDMQTT_URL) {
-	var url = require('url');
-	var u = url.parse(mqtt_url);
-	client = mqtt.createClient(u.port, u.hostname, {
+	client = mqtt.connect(process.env.CLOUDMQTT_URL, {
 		username: config.mqttUser,
 		password: config.mqttPassword
 	});
